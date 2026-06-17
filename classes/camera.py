@@ -13,16 +13,20 @@ class Camera:
         self.width = WIDTH / 2
         self.height = HEIGHT / 2
 
-    def update(self, player):
-        self.offset_x = player.rect.centerx - self.width
-        self.offset_y = player.rect.centery - self.height
+    def update(self, player, world_size):
+        self.offset_x = min(
+            max(player.rect.centerx - self.width, 0), world_size - (self.width * 2)
+        )
+        self.offset_y = min(
+            max(player.rect.centery - self.height, 0), world_size - (self.height * 2)
+        )
 
     def apply(self, sprite):
         x = sprite.rect.centerx - self.offset_x
         y = sprite.rect.centery - self.offset_y
 
         rect = pygame.Rect((x, y), sprite.rect.size)
-        print(sprite.rect.centerx, self.offset_x, x)
+        # print(sprite.rect.centerx, self.offset_x, x)
 
         return rect
 

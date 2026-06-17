@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
     passive_skill_list: list[PassiveSkill]
     active_skill_list: list[ActiveSkill]
 
-    def __init__(self, x, y, image):
+    def __init__(self, x, y, front_image, side_image, back_image):
         super().__init__()
         self.health = 100
         self.armour = 0
@@ -34,17 +34,27 @@ class Player(pygame.sprite.Sprite):
         self.passive_skill_list = []
         self.active_skill_list = []
 
-        self.image: pygame.Surface = pygame.image.load(image)
+        self.front_image = pygame.image.load(front_image)
+        self.front_image = pygame.transform.scale(self.front_image, self.size)
+
+        self.side_image = pygame.image.load(side_image)
+        self.side_image = pygame.transform.scale(self.side_image, self.size)
+
+        self.back_image = pygame.image.load(back_image)
+        self.back_image = pygame.transform.scale(self.back_image, self.size)
+
+        self.image: pygame.Surface = pygame.image.load(front_image)
         self.image = pygame.transform.scale(self.image, self.size)
         self.rect = self.image.get_rect(center=(x, y))
 
-    def update(self, projectile_sprite_list, xp_sprite_list, game_time):
+    def update(self, projectile_sprite_list, xp_sprite_list, game_time, camera):
 
+        player_world_position = camera.apply(self)
         # mouse
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
-        mouse_direction_x = mouse_x - self.rect.centerx
-        mouse_direction_y = mouse_y - self.rect.centery
+        mouse_direction_x = mouse_x - player_world_position.centerx
+        mouse_direction_y = mouse_y - player_world_position.centery
 
         mouse_vector = pygame.math.Vector2(mouse_direction_x, mouse_direction_y)
         mouse_vector = mouse_vector.normalize()
@@ -56,16 +66,16 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w] or keys[pygame.K_UP]:
-            self.image = pygame.transform.rotate(self.image, 90)
+            self.image = self.back_image
             dy -= 1
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            self.image = pygame.transform.rotate(self.image, 0)
+            self.image = self.front_image
             dy += 1
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            self.image = pygame.transform.rotate(self.image, 270)
+            self.image = pygame.transform.flip(self.side_image, True, False)
             dx -= 1
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            self.image = pygame.transform.rotate(self.image, 180)
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:  #
+            self.image = self.side_image
             dx += 1
 
         directional_vector = pygame.math.Vector2(dx, dy)
@@ -81,7 +91,7 @@ class Player(pygame.sprite.Sprite):
             )
 
         # ABILITY CASTING
-        self.ability_casting(mouse_vector, projectile_sprite_list, game_time)
+        self.ability_casting(mouse_vector, projectile_sprite_list, game_time, camera)
 
         # XP PICKUP
         self.pick_up_xp(xp_sprite_list)
@@ -89,7 +99,7 @@ class Player(pygame.sprite.Sprite):
         # CHECK LEVEL UP
         self.check_level_up()
 
-    def ability_casting(self, mouse_vector, projectile_sprite_list, game_time):
+    def ability_casting(self, mouse_vector, projectile_sprite_list, game_time, camera):
 
         keys = pygame.key.get_pressed()
 

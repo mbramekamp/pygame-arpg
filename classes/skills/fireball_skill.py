@@ -1,5 +1,5 @@
-from projectile import Projectile
-from skills.active_skill import ActiveSkill
+from classes.projectile import Projectile
+from classes.skills.active_skill import ActiveSkill
 
 
 class FireballSkill(ActiveSkill):

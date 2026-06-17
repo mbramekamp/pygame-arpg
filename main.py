@@ -4,18 +4,21 @@ from classes.camera import Camera
 from classes.enemy import Enemy
 from classes.map_generator import MapGenerator
 from classes.player import Player
+from classes.skills.fireball_skill import FireballSkill
 
 pygame.init()
-
+# nach pygame.init()
+font = pygame.font.SysFont("Arial", 20)
 # SCREEN SIZES
 SCREEN_HEIGHT = 900
 SCREEN_WIDTH = 1600
 
 
 # WORLD SIZES
-HEIGHT = 1000
-WIDTH = 1000
+HEIGHT = 100
+WIDTH = 100
 TILE_SIZE = 32
+WORLD_SIZE = HEIGHT * TILE_SIZE
 COLORS = {"floor": (194, 178, 128), "wall": (30, 30, 30)}
 
 
@@ -42,13 +45,26 @@ enemy_sprite_list = pygame.sprite.Group()
 projectile_sprite_list = pygame.sprite.Group()
 xp_sprite_list = pygame.sprite.Group()
 
-player = Player(x=WIDTH / 2, y=HEIGHT / 2, image="images\\Player.png")
+player = Player(
+    x=WORLD_SIZE / 2,
+    y=WORLD_SIZE / 2,
+    front_image="images\\Player.png",
+    side_image="images\\PlayerSide.png",
+    back_image="images\\PlayerBack.png",
+)
 
 # debug
-# enemy = Enemy(image="images\\enemy.png", x=800, y=700)
-# enemy_sprite_list.add(enemy)
+enemy = Enemy(image="images\\enemy.png", x=800, y=700)
+enemy_sprite_list.add(enemy)
+fireball = FireballSkill(
+    "Fireball", 5, 0.34, 150, 5, "", images="images\\FireBall.png", size=(25, 25)
+)
 
-camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
+player.active_skill_list.append(fireball)
+camera = Camera(
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+)
 world_generator = MapGenerator()
 noise_map = world_generator.generate_map()
 tile_map = world_generator.create_tile_map(noise_map)
@@ -68,10 +84,11 @@ while running:
     draw_map(screen, tile_map, camera)
 
     # UPDATE
-    projectile_sprite_list.update()
-    player.update(xp_sprite_list, projectile_sprite_list, GAME_TIME)
+    projectile_sprite_list.update(screen, WORLD_SIZE)
+    print(f"After update, list size: {len(projectile_sprite_list)}")
+    player.update(projectile_sprite_list, xp_sprite_list, GAME_TIME, camera)
     enemy_sprite_list.update(player)
-    camera.update(player)
+    camera.update(player, WORLD_SIZE)
 
     # RENDER
     for xp in xp_sprite_list:
@@ -84,6 +101,12 @@ while running:
     for proj in projectile_sprite_list:
         screen.blit(proj.image, camera.apply(proj))
 
+    pos_text = font.render(
+        f"World: {int(player.rect.centerx)}, {int(player.rect.centery)}",
+        True,
+        (255, 255, 255),
+    )
+    screen.blit(pos_text, (10, 10))
     pygame.display.flip()
 
     clock.tick(60)
