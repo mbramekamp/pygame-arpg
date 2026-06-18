@@ -10,7 +10,7 @@ class Projectile(pygame.sprite.Sprite):
     damage: int
     sound: str
 
-    def __init__(self, x, y, direction, speed, damage, image, sound, size):
+    def __init__(self, x, y, direction, speed, damage, image, sound, size, cost):
         super().__init__()
 
         self.x = x
@@ -59,4 +59,3 @@ class Projectile(pygame.sprite.Sprite):
         for enemy in enemy_collisions:
             enemy.take_damage(self.damage, xp_sprite_list)
             self.kill()
-        

@@ -6,9 +6,13 @@ from classes.skills.passive_skill import PassiveSkill
 
 class Player(pygame.sprite.Sprite):
     health: int
+    max_health: int
     armour: int
     speed: float
     xp: int
+    required_xp: int
+    mana: int
+    max_mana: int
     level: int
 
     x: float
@@ -21,10 +25,14 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, front_image, side_image, back_image):
         super().__init__()
         self.health = 100
+        self.max_health = self.health
         self.armour = 0
         self.speed = 10
         self.xp = 0
+        self.mana = 100
+        self.max_mana = self.mana
         self.level = 1
+        self.required_xp = int(25 * self.level**1.7)
 
         self.x = x
         self.y = y
@@ -47,7 +55,15 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, self.size)
         self.rect = self.image.get_rect(center=(x, y))
 
-    def update(self, projectile_sprite_list, xp_sprite_list, game_time, camera, world_size, tile_map):
+    def update(
+        self,
+        projectile_sprite_list,
+        xp_sprite_list,
+        game_time,
+        camera,
+        world_size,
+        tile_map,
+    ):
 
         # Player values in update
         player_world_position = camera.apply(self)
@@ -105,8 +121,12 @@ class Player(pygame.sprite.Sprite):
             if tile_map[tile_y][tile_x] == "wall":
                 self.rect.centery = prev_y
 
-        self.rect.centerx = max(0, min(self.rect.centerx, world_size - self.size[0] / 2))
-        self.rect.centery = max(0, min(self.rect.centery, world_size - self.size[0] / 2))
+        self.rect.centerx = max(
+            0, min(self.rect.centerx, world_size - self.size[0] / 2)
+        )
+        self.rect.centery = max(
+            0, min(self.rect.centery, world_size - self.size[0] / 2)
+        )
 
         # ABILITY CASTING
         self.ability_casting(mouse_vector, projectile_sprite_list, game_time, camera)
@@ -119,7 +139,8 @@ class Player(pygame.sprite.Sprite):
 
         # print(f"tile_x: {tile_x}, tile_y: {tile_y}, tile: {tile_map[tile_y][tile_x]}")
 
-
+        self.regen_property("health", "max_health", 3, 20, game_time)
+        self.regen_property("mana", "max_mana", 2, 25, game_time)
 
     def ability_casting(self, mouse_vector, projectile_sprite_list, game_time, camera):
 
@@ -131,53 +152,62 @@ class Player(pygame.sprite.Sprite):
             if len(self.active_skill_list) >= 1:
                 if self.active_skill_list[0].can_cast(game_time):
                     if keys[pygame.K_1]:
-                        projectile = self.active_skill_list[0].cast(
-                            x=self.rect.centerx,
-                            y=self.rect.centery,
-                            direction=mouse_vector,
-                        )
-                        projectile_sprite_list.add(projectile)
-
-                        self.active_skill_list[0].last_cast_time = pygame.time.get_ticks() // 1000
+                        if self.mana >= self.active_skill_list[0].cost:
+                            projectile = self.active_skill_list[0].cast(
+                                x=self.rect.centerx,
+                                y=self.rect.centery,
+                                direction=mouse_vector,
+                            )
+                            projectile_sprite_list.add(projectile)
+                            self.active_skill_list[0].last_cast_time = (
+                                pygame.time.get_ticks() // 1000
+                            )
+                            self.mana -= self.active_skill_list[0].cost
 
             if len(self.active_skill_list) >= 2:
                 if self.active_skill_list[1].can_cast(game_time):
                     if keys[pygame.K_2]:
-                        projectile = self.active_skill_list[1].cast(
-                            x=self.rect.centerx,
-                            y=self.rect.centery,
-                            direction=mouse_vector,
-                        )
-                        projectile_sprite_list.add(projectile)
-
-                        self.active_skill_list[1].last_cast_time = pygame.time.get_ticks() // 1000
-
+                        if self.mana > self.active_skill_list[1].cost:
+                            projectile = self.active_skill_list[1].cast(
+                                x=self.rect.centerx,
+                                y=self.rect.centery,
+                                direction=mouse_vector,
+                            )
+                            projectile_sprite_list.add(projectile)
+                            self.active_skill_list[1].last_cast_time = (
+                                pygame.time.get_ticks() // 1000
+                            )
+                            self.mana -= self.active_skill_list[1].cost
 
             if len(self.active_skill_list) >= 3:
                 if self.active_skill_list[2].can_cast(game_time):
                     if keys[pygame.K_3]:
-                        projectile = self.active_skill_list[2].cast(
-                            x=self.rect.centerx,
-                            y=self.rect.centery,
-                            direction=mouse_vector,
-                        )
-                        projectile_sprite_list.add(projectile)
-
-                        self.active_skill_list[2].last_cast_time = pygame.time.get_ticks() // 1000
+                        if self.mana > self.active_skill_list[2].cost:
+                            projectile = self.active_skill_list[2].cast(
+                                x=self.rect.centerx,
+                                y=self.rect.centery,
+                                direction=mouse_vector,
+                            )
+                            projectile_sprite_list.add(projectile)
+                            self.active_skill_list[2].last_cast_time = (
+                                pygame.time.get_ticks() // 1000
+                            )
+                            self.mana -= self.active_skill_list[2].cost
 
             if len(self.active_skill_list) >= 4:
                 if self.active_skill_list[3].can_cast(game_time):
                     if keys[pygame.K_4]:
-                        projectile = self.active_skill_list[3].cast(
-                            x=self.rect.centerx,
-                            y=self.rect.centery,
-                            direction=mouse_vector,
-                        )
-                        projectile_sprite_list.add(projectile)
-
-                        self.active_skill_list[3].last_cast_time = pygame.time.get_ticks() // 1000
-
-                        
+                        if self.mana > self.active_skill_list[3].cost:
+                            projectile = self.active_skill_list[3].cast(
+                                x=self.rect.centerx,
+                                y=self.rect.centery,
+                                direction=mouse_vector,
+                            )
+                            projectile_sprite_list.add(projectile)
+                            self.active_skill_list[3].last_cast_time = (
+                                pygame.time.get_ticks() // 1000
+                            )
+                            self.mana -= self.active_skill_list[3].cost
 
     def pick_up_xp(self, xp_sprite_list):
 
@@ -199,3 +229,17 @@ class Player(pygame.sprite.Sprite):
         print(f"Player Health: {self.health}")
         if self.health <= 0:
             pygame.quit()
+
+    def calculate_percentages(self):
+        health_percentage = self.health / self.max_health
+        xp_percentage = self.xp / int(25 * self.level**1.7)
+        mana_percentage = self.mana / self.max_mana
+        print(f"mana %: {mana_percentage}, mana: {self.mana}")
+        return health_percentage, xp_percentage, mana_percentage
+
+    def regen_property(self, attribute, max_attribute, amount, frequency, game_time):
+        if game_time % frequency == 0 and getattr(self, attribute) < getattr(
+            self, max_attribute
+        ):
+            value = min(getattr(self, attribute) + amount, getattr(self, max_attribute))
+            setattr(self, attribute, value)

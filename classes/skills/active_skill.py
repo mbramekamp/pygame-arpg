@@ -16,7 +16,7 @@ class ActiveSkill(Skill, ABC):
         pass
 
     def can_cast(self, game_time) -> bool:
-        print(f"game_time: {game_time}, last_cast: {self.last_cast_time}, cooldown: {self.cooldown}")
+        # print(f"game_time: {game_time}, last_cast: {self.last_cast_time}, cooldown: {self.cooldown}")
         if game_time - self.last_cast_time >= self.cooldown:
             return True
 

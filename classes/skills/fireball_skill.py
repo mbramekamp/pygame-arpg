@@ -27,6 +27,7 @@ class FireballSkill(ActiveSkill):
             self.image,
             self.sound,
             self.size,
+            self.cost,
         )
         return projectile
 

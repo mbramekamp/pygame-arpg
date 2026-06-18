@@ -2,6 +2,7 @@ import pygame
 
 from classes.camera import Camera
 from classes.enemy import Enemy
+from classes.hud import HUD
 from classes.map_generator import MapGenerator
 from classes.player import Player
 from classes.skills.fireball_skill import FireballSkill
@@ -54,10 +55,17 @@ player = Player(
 )
 
 # debug
-enemy = Enemy(image="images\\enemy.png", x=WORLD_SIZE / 3, y= WORLD_SIZE / 3)
+enemy = Enemy(image="images\\enemy.png", x=WORLD_SIZE / 3, y=WORLD_SIZE / 3)
 enemy_sprite_list.add(enemy)
 fireball = FireballSkill(
-    "Fireball", 2, 1, 150, 12, "", images="images\\FireBall.png", size=(75, 75)
+    name="Fireball",
+    cooldown=3,
+    cost=25,
+    damage=50,
+    speed=12,
+    sound="",
+    images="images\\FireBall.png",
+    size=(75, 75),
 )
 
 player.active_skill_list.append(fireball)
@@ -71,6 +79,9 @@ tile_map = world_generator.create_tile_map(noise_map)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
+
+hud = HUD(screen, player)
+
 running = True
 
 while running:
@@ -86,7 +97,9 @@ while running:
     # UPDATE
     projectile_sprite_list.update(screen, WORLD_SIZE, enemy_sprite_list, xp_sprite_list)
     # print(f"After update, list size: {len(projectile_sprite_list)}")
-    player.update(projectile_sprite_list, xp_sprite_list, GAME_TIME, camera, WORLD_SIZE, tile_map)
+    player.update(
+        projectile_sprite_list, xp_sprite_list, GAME_TIME, camera, WORLD_SIZE, tile_map
+    )
     enemy_sprite_list.update(player, camera, tile_map, WORLD_SIZE)
     camera.update(player, WORLD_SIZE)
 
@@ -107,35 +120,9 @@ while running:
         (255, 255, 255),
     )
 
-    health_text = font.render(
-        f"HEALTH: {player.health}",
-        True,
-        (255, 255, 255),
-    )
-
-    xp_text = font.render(
-        f"XP: {player.xp}",
-        True,
-        (255, 255, 255),
-    )
-
-    level_text = font.render(
-        f"LEVEL: {player.level}",
-        True,
-        (255, 255, 255),
-    )
-    
-    skill_text = font.render(
-        f"SKILL 1 Cooldown: {player.active_skill_list[0].cooldown}",
-        True,
-        (255, 255, 255)
-    )
-
     screen.blit(pos_text, (10, 10))
-    screen.blit(health_text, (10, 60))
-    screen.blit(xp_text, (10, 110))
-    screen.blit(level_text, (10, 160))
-    screen.blit(skill_text, (10, 800))
+    hud.draw_hud()
+
     pygame.display.flip()
 
     clock.tick(60)
