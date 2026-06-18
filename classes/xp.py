@@ -8,7 +8,7 @@ class XP(pygame.sprite.Sprite):
     def __init__(self, image, x, y):
         super().__init__()
         self.value = 5
-        self.size = (5, 5)
+        self.size = (15, 15)
 
         self.image = pygame.image.load(image)
         self.image = pygame.transform.scale(self.image, self.size)

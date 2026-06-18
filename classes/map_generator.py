@@ -1,3 +1,5 @@
+from random import randint
+
 from opensimplex.api import OpenSimplex
 
 
@@ -9,7 +11,7 @@ class MapGenerator:
     scale: float
 
     def __init__(self):
-        self.seed = 387
+        self.seed = randint(0, 2**32)
         self.map_width = 100
         self.map_height = 100
         self.tile_size = 32

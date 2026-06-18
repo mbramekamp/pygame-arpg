@@ -47,9 +47,17 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, self.size)
         self.rect = self.image.get_rect(center=(x, y))
 
-    def update(self, projectile_sprite_list, xp_sprite_list, game_time, camera):
+    def update(self, projectile_sprite_list, xp_sprite_list, game_time, camera, world_size, tile_map):
 
+        # Player values in update
         player_world_position = camera.apply(self)
+
+        prev_x = self.rect.centerx
+        prev_y = self.rect.centery
+
+        tile_x = self.rect.centerx // 32
+        tile_y = self.rect.centery // 32
+
         # mouse
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
@@ -83,12 +91,22 @@ class Player(pygame.sprite.Sprite):
         if directional_vector.length() > 0:
             normalized_direction = directional_vector.normalize()
 
-            self.rect.centerx = self.rect.centerx + (
-                normalized_direction.x * self.speed
-            )
-            self.rect.centery = self.rect.centery + (
-                normalized_direction.y * self.speed
-            )
+            # X separat
+            self.rect.centerx += normalized_direction.x * self.speed
+            tile_x = self.rect.centerx // 32
+            tile_y = self.rect.centery // 32
+            if tile_map[tile_y][tile_x] == "wall":
+                self.rect.centerx = prev_x
+
+            # Y separat
+            self.rect.centery += normalized_direction.y * self.speed
+            tile_x = self.rect.centerx // 32
+            tile_y = self.rect.centery // 32
+            if tile_map[tile_y][tile_x] == "wall":
+                self.rect.centery = prev_y
+
+        self.rect.centerx = max(0, min(self.rect.centerx, world_size - self.size[0] / 2))
+        self.rect.centery = max(0, min(self.rect.centery, world_size - self.size[0] / 2))
 
         # ABILITY CASTING
         self.ability_casting(mouse_vector, projectile_sprite_list, game_time, camera)
@@ -98,6 +116,10 @@ class Player(pygame.sprite.Sprite):
 
         # CHECK LEVEL UP
         self.check_level_up()
+
+        # print(f"tile_x: {tile_x}, tile_y: {tile_y}, tile: {tile_map[tile_y][tile_x]}")
+
+
 
     def ability_casting(self, mouse_vector, projectile_sprite_list, game_time, camera):
 
@@ -115,6 +137,9 @@ class Player(pygame.sprite.Sprite):
                             direction=mouse_vector,
                         )
                         projectile_sprite_list.add(projectile)
+
+                        self.active_skill_list[0].last_cast_time = pygame.time.get_ticks() // 1000
+
             if len(self.active_skill_list) >= 2:
                 if self.active_skill_list[1].can_cast(game_time):
                     if keys[pygame.K_2]:
@@ -125,6 +150,9 @@ class Player(pygame.sprite.Sprite):
                         )
                         projectile_sprite_list.add(projectile)
 
+                        self.active_skill_list[1].last_cast_time = pygame.time.get_ticks() // 1000
+
+
             if len(self.active_skill_list) >= 3:
                 if self.active_skill_list[2].can_cast(game_time):
                     if keys[pygame.K_3]:
@@ -134,6 +162,9 @@ class Player(pygame.sprite.Sprite):
                             direction=mouse_vector,
                         )
                         projectile_sprite_list.add(projectile)
+
+                        self.active_skill_list[2].last_cast_time = pygame.time.get_ticks() // 1000
+
             if len(self.active_skill_list) >= 4:
                 if self.active_skill_list[3].can_cast(game_time):
                     if keys[pygame.K_4]:
@@ -143,6 +174,10 @@ class Player(pygame.sprite.Sprite):
                             direction=mouse_vector,
                         )
                         projectile_sprite_list.add(projectile)
+
+                        self.active_skill_list[3].last_cast_time = pygame.time.get_ticks() // 1000
+
+                        
 
     def pick_up_xp(self, xp_sprite_list):
 
@@ -158,3 +193,9 @@ class Player(pygame.sprite.Sprite):
             self.xp -= required_xp
             self.level += 1
             required_xp = int(25 * self.level**1.7)
+
+    def take_damage(self, amount):
+        self.health -= amount
+        print(f"Player Health: {self.health}")
+        if self.health <= 0:
+            pygame.quit()

@@ -8,7 +8,7 @@ from classes.skills.fireball_skill import FireballSkill
 
 pygame.init()
 # nach pygame.init()
-font = pygame.font.SysFont("Arial", 20)
+font = pygame.font.SysFont("Arial", 50)
 # SCREEN SIZES
 SCREEN_HEIGHT = 900
 SCREEN_WIDTH = 1600
@@ -54,10 +54,10 @@ player = Player(
 )
 
 # debug
-enemy = Enemy(image="images\\enemy.png", x=800, y=700)
+enemy = Enemy(image="images\\enemy.png", x=WORLD_SIZE / 3, y= WORLD_SIZE / 3)
 enemy_sprite_list.add(enemy)
 fireball = FireballSkill(
-    "Fireball", 5, 0.34, 150, 5, "", images="images\\FireBall.png", size=(25, 25)
+    "Fireball", 2, 1, 150, 12, "", images="images\\FireBall.png", size=(75, 75)
 )
 
 player.active_skill_list.append(fireball)
@@ -84,10 +84,10 @@ while running:
     draw_map(screen, tile_map, camera)
 
     # UPDATE
-    projectile_sprite_list.update(screen, WORLD_SIZE)
-    print(f"After update, list size: {len(projectile_sprite_list)}")
-    player.update(projectile_sprite_list, xp_sprite_list, GAME_TIME, camera)
-    enemy_sprite_list.update(player)
+    projectile_sprite_list.update(screen, WORLD_SIZE, enemy_sprite_list, xp_sprite_list)
+    # print(f"After update, list size: {len(projectile_sprite_list)}")
+    player.update(projectile_sprite_list, xp_sprite_list, GAME_TIME, camera, WORLD_SIZE, tile_map)
+    enemy_sprite_list.update(player, camera, tile_map, WORLD_SIZE)
     camera.update(player, WORLD_SIZE)
 
     # RENDER
@@ -106,7 +106,36 @@ while running:
         True,
         (255, 255, 255),
     )
+
+    health_text = font.render(
+        f"HEALTH: {player.health}",
+        True,
+        (255, 255, 255),
+    )
+
+    xp_text = font.render(
+        f"XP: {player.xp}",
+        True,
+        (255, 255, 255),
+    )
+
+    level_text = font.render(
+        f"LEVEL: {player.level}",
+        True,
+        (255, 255, 255),
+    )
+    
+    skill_text = font.render(
+        f"SKILL 1 Cooldown: {player.active_skill_list[0].cooldown}",
+        True,
+        (255, 255, 255)
+    )
+
     screen.blit(pos_text, (10, 10))
+    screen.blit(health_text, (10, 60))
+    screen.blit(xp_text, (10, 110))
+    screen.blit(level_text, (10, 160))
+    screen.blit(skill_text, (10, 800))
     pygame.display.flip()
 
     clock.tick(60)
